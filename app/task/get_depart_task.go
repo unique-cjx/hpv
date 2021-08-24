@@ -2,7 +2,6 @@ package task
 
 import (
 	"go.uber.org/zap"
-	"hpv/app/util"
 	"hpv/config"
 )
 
@@ -38,13 +37,13 @@ type DepartmentsResp struct {
 func GetActiveDepartList(regionCode string) (rows []*DepartRows, err error) {
 	param := map[string]string{
 		"offset":     "0",
-		"limit":      "100",
+		"limit":      "80",
 		"regionCode": regionCode,
 		"sortType":   "1",
 		"isOpen":     "1",
 		"customId":   "3",
 	}
-	resp, err := util.GetResp(config.DepartmentsUrl, param, "")
+	resp, err := TaskStorage.GetResource(config.DepartmentsUrl, param)
 	if err != nil {
 		zap.L().Error("get departments error", zap.Error(err))
 		return

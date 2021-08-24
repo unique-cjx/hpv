@@ -7,7 +7,10 @@ import (
 
 func main() {
 	app := bootstrap.NewApp()
-	app.AddTask(bootstrap.Task{Values: []interface{}{app.Ctx}, Handler: task.GetActiveRegions})
-	app.AddTask(bootstrap.Task{Handler: task.SubscribeDepart})
+
+	app.AddTask(bootstrap.Task{Values: []interface{}{app.Ctx}, Handler: task.DispatchMess})
+	app.AddTask(bootstrap.Task{Handler: task.SendMess})
+	app.AddTask(bootstrap.Task{Handler: task.RefreshToken})
+
 	app.Run()
 }

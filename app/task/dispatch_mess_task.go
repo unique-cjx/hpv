@@ -16,24 +16,26 @@ type City struct {
 	Value string `json:"value"`
 }
 
-// GetActiveRegions _
-func GetActiveRegions(values ...interface{}) {
-	zap.L().Info("start subscribe task...")
+// DispatchMess _
+func DispatchMess(values ...interface{}) {
+	zap.L().Info("start dispatch mess task...")
 	ctx := values[0].(*context.Context)
 	wg := values[1].(*sync.WaitGroup)
 
 	ymConf := ctx.GetAppConfig().YueMiao
+	TaskStorage.Tk = ymConf.Tk
 
-	resp, err := util.GetResp(config.CityListUrl, map[string]string{"parentCode": ymConf.Province.Code}, "")
+	resp, err := TaskStorage.GetResource(config.CityListUrl, map[string]string{"parentCode": ymConf.Province.Code})
 	if err != nil {
 		log.Panic("get city list fail")
 	}
+	zap.L().Debug("city list", zap.Any("data", resp))
 
 	var cityList []City
 	respBytes, _ := json.Marshal(resp.Data)
 	json.Unmarshal(respBytes, &cityList)
 
-	tick := time.NewTicker(time.Second * 3)
+	tick := time.NewTicker(time.Second * 6)
 	for {
 		<-tick.C
 
@@ -53,15 +55,17 @@ func GetActiveRegions(values ...interface{}) {
 		}
 
 		for _, depart := range departList {
-			depart.SubScribeNum, err = GetSubscribeDepartNum(depart.DepaVaccId, ymConf.Tk)
+			depart.SubScribeNum, err = GetSubscribeDepartNum(depart.DepaVaccId)
 			if err != nil {
 				zap.L().Error("get subscribe num fail", zap.Error(err))
 				continue
 			}
-			DepartStorage.Lock.RLock()
+			zap.L().Debug("depart detail", zap.Any("data", depart))
+
+			TaskStorage.Lock.RLock()
 			did := depart.DepaVaccId
 			if depart.SubScribeNum <= config.SubscribeAbleNum {
-				for _, v := range DepartStorage.Dids {
+				for _, v := range TaskStorage.DepartIds {
 					if v == did {
 						goto Loop
 					}
@@ -69,17 +73,17 @@ func GetActiveRegions(values ...interface{}) {
 				DepartChan <- depart
 			}
 		Loop:
-			DepartStorage.Lock.RUnlock()
+			TaskStorage.Lock.RUnlock()
 		}
 
 	}
 	wg.Done()
 }
 
-// GetSubscribeDepartNum _
-func GetSubscribeDepartNum(id int64, tk string) (data int64, err error) {
+// GetSubscribeDepartNum 获取指定社区的订阅人数
+func GetSubscribeDepartNum(id int64) (data int64, err error) {
 	params := map[string]string{"depaVaccId": util.ToString(id)}
-	resp, err := util.GetResp(config.SubscribeUrl, params, tk)
+	resp, err := TaskStorage.GetResource(config.SubscribeUrl, params)
 	if err != nil {
 		return
 	}

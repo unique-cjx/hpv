@@ -9,6 +9,8 @@ import (
 
 	"github.com/jinzhu/configor"
 	"go.uber.org/zap"
+
+	"gopkg.in/natefinch/lumberjack.v2"
 )
 
 type App struct {
@@ -28,6 +30,7 @@ func NewApp() (app *App) {
 	return
 }
 
+// initConfig 初始化配置文件
 func (app App) initConfig() (err error) {
 	// config init
 	rootDir := app.Ctx.Get("root_dir").(string)
@@ -41,11 +44,15 @@ func (app App) initConfig() (err error) {
 		return
 	}
 	config := new(lib.YamlConfig)
-	err = configor.New(&configor.Config{Debug: true}).Load(config, file)
+	err = configor.Load(config, file)
+	if err != nil {
+		return
+	}
 	app.Ctx.SetAppConfig(config)
 	return
 }
 
+// initLogger 初始化日志
 func (app App) initLogger() (err error) {
 	rootDir := app.Ctx.Get("root_dir").(string)
 	file := rootDir + "/logs/runtime.log"
@@ -55,38 +62,53 @@ func (app App) initLogger() (err error) {
 		return
 	}
 
-	var zapConf zap.Config
-	encoderConfig := zapcore.EncoderConfig{
+	// 自定义日志级别显示
+	customLevelEncoder := func(level zapcore.Level, enc zapcore.PrimitiveArrayEncoder) {
+		enc.AppendString("[" + level.CapitalString() + "]")
+	}
+
+	// 自定义文件：行号输出项
+	customCallerEncoder := func(caller zapcore.EntryCaller, enc zapcore.PrimitiveArrayEncoder) {
+		enc.AppendString(caller.TrimmedPath())
+	}
+
+	zapConfig := zapcore.EncoderConfig{
 		TimeKey:        "time",
 		LevelKey:       "level",
 		NameKey:        "logger",
-		CallerKey:      "caller",
+		CallerKey:      "caller_line",
 		MessageKey:     "msg",
 		StacktraceKey:  "stacktrace",
 		LineEnding:     zapcore.DefaultLineEnding,
-		EncodeLevel:    zapcore.LowercaseLevelEncoder,                      // 小写编码器
+		EncodeLevel:    customLevelEncoder,
 		EncodeTime:     zapcore.TimeEncoderOfLayout("2006-01-02 15:04:05"), // ISO8601 UTC 时间格式
 		EncodeDuration: zapcore.SecondsDurationEncoder,
-		EncodeCaller:   zapcore.ShortCallerEncoder, // 全路径编码器
+		EncodeCaller:   customCallerEncoder,
+		EncodeName:     zapcore.FullNameEncoder,
 	}
-	if conf.Logger.Debug {
-		zapConf = zap.NewDevelopmentConfig()
-	} else {
-		zapConf = zap.NewProductionConfig()
-	}
-	zapConf.EncoderConfig = encoderConfig
 
+	// 设置日志多个输出流
+	opts := []zapcore.WriteSyncer{
+		zapcore.AddSync(&lumberjack.Logger{
+			Filename:   file,
+			MaxSize:    128,
+			MaxAge:     7,
+			MaxBackups: 0,
+			LocalTime:  true,
+			Compress:   false,
+		}),
+		zapcore.AddSync(os.Stdout),
+	}
+
+	// 设置日志级别
 	zapLevel := zap.NewAtomicLevel()
 	if err = zapLevel.UnmarshalText([]byte(conf.Logger.Level)); err != nil {
 		return
 	}
-	zapConf.Level = zapLevel
-	zapConf.Encoding = "json"
-	zapConf.OutputPaths = []string{file}
-	zapConf.ErrorOutputPaths = []string{file}
+	core := zapcore.NewCore(zapcore.NewJSONEncoder(zapConfig), zapcore.NewMultiWriteSyncer(opts...), zapLevel)
 
-	logger, _ := zapConf.Build()
-
+	// 开启堆栈跟踪和文件及行号
+	logger := zap.New(core, zap.AddCaller(), zap.Development())
 	zap.RedirectStdLog(logger)
 	zap.ReplaceGlobals(logger)
 

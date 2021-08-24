@@ -17,9 +17,9 @@ import (
 	"github.com/skip2/go-qrcode"
 )
 
-// SubscribeDepart _
-func SubscribeDepart(values ...interface{}) {
-	zap.L().Info("start send subscribe mess task...")
+// SendMess _ _
+func SendMess(values ...interface{}) {
+	zap.L().Info("start send mess task...")
 
 	wg := values[0].(*sync.WaitGroup)
 	pwd, _ := os.Getwd()
@@ -86,10 +86,10 @@ func SubscribeDepart(values ...interface{}) {
 
 		zap.L().Debug("qq-cq server resp body", zap.String("body", string(respBytes)))
 
-		DepartStorage.Lock.Lock()
+		TaskStorage.Lock.Lock()
 		// todo 发过的社区不会再次发送，后面会补上重复发送的机制
-		DepartStorage.Dids = append(DepartStorage.Dids, depart.DepaVaccId)
-		DepartStorage.Lock.Unlock()
+		TaskStorage.DepartIds = append(TaskStorage.DepartIds, depart.DepaVaccId)
+		TaskStorage.Lock.Unlock()
 	}
 
 	wg.Done()
