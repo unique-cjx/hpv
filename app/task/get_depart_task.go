@@ -16,7 +16,7 @@ type DepartRows struct {
 	Address       string `json:"address"`
 	WorktimeDesc  string `json:"worktimeDesc"`
 	Total         int    `json:"total"`
-	SubScribeNum  int64  `json:"-"` // 订阅人数
+	SubScribeNum  int64  `json:"suscribeNum"` // 订阅人数
 	IsSeckill     int8   `json:"isSeckill"`
 	StopSubscribe int8   `json:"stopSubscribe"`
 }
