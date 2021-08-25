@@ -2,7 +2,7 @@ logger:
   level: debug
 
 yuemiao:
-  tk: "wxtoken:a124fb15dede8e2eb066bd68793b9065_2ee27d6ac506ef6036e33f9972f0a9cc"
+  tk: "wxtoken:a124fb15dede8e2eb066bd68793b9065_bfdd37a6547b7c428d2af90b01567dcf"
 
   province:
     name: "四川省"
