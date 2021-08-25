@@ -86,10 +86,11 @@ func SendMess(values ...interface{}) {
 
 		zap.L().Debug("qq-cq server resp body", zap.String("body", string(respBytes)))
 
-		TaskStorage.Lock.Lock()
-		// todo 发过的社区不会再次发送，后面会补上重复发送的机制
-		TaskStorage.DepartIds = append(TaskStorage.DepartIds, depart.DepaVaccId)
-		TaskStorage.Lock.Unlock()
+		TaskStorage.DidLock.Lock()
+		TaskStorage.DepartIds = append(TaskStorage.DepartIds, depart.DepaVaccId) // todo 发过的社区不会再次发送，后面会补上重复发送的机制
+		TaskStorage.DidLock.Unlock()
+
+		time.Sleep(time.Second * 3)
 	}
 
 	wg.Done()

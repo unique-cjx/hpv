@@ -35,7 +35,7 @@ func DispatchMess(values ...interface{}) {
 	respBytes, _ := json.Marshal(resp.Data)
 	json.Unmarshal(respBytes, &cityList)
 
-	tick := time.NewTicker(time.Second * 8)
+	tick := time.NewTicker(time.Second * 6)
 	for {
 		<-tick.C
 
@@ -54,6 +54,7 @@ func DispatchMess(values ...interface{}) {
 			}
 		}
 		for _, depart := range departList {
+			time.Sleep(time.Second * 1)
 			depart.SubScribeNum, err = GetSubscribeNum(depart.DepaVaccId)
 			if err != nil {
 				zap.L().Error("get subscribe num fail", zap.Error(err))
@@ -61,7 +62,7 @@ func DispatchMess(values ...interface{}) {
 			}
 			zap.L().Debug("depart detail", zap.Any("data", depart))
 
-			TaskStorage.Lock.RLock()
+			TaskStorage.DidLock.RLock()
 			did := depart.DepaVaccId
 			if depart.SubScribeNum <= config.SubscribeAbleNum {
 				for _, v := range TaskStorage.DepartIds {
@@ -72,7 +73,7 @@ func DispatchMess(values ...interface{}) {
 				DepartChan <- depart
 			}
 		Loop:
-			TaskStorage.Lock.RUnlock()
+			TaskStorage.DidLock.RUnlock()
 		}
 	}
 	wg.Done()

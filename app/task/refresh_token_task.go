@@ -14,7 +14,7 @@ const tokenPrefix = "_xzkj_"
 // RefreshToken _
 func RefreshToken(values ...interface{}) {
 	wg := values[0].(*sync.WaitGroup)
-	tick := time.NewTicker(time.Minute * 90)
+	tick := time.NewTicker(time.Minute * 30)
 
 	for {
 		<-tick.C
@@ -42,7 +42,7 @@ func RefreshToken(values ...interface{}) {
 				TaskStorage.Tk = ck.Value
 			}
 		}
-		zap.L().Debug("refresh wxtoken is", zap.String("token", TaskStorage.Tk))
+		zap.L().Debug("refresh wxtoken", zap.String("data", TaskStorage.Tk))
 	}
 
 Loop:
