@@ -35,7 +35,7 @@ func DispatchMess(values ...interface{}) {
 	respBytes, _ := json.Marshal(resp.Data)
 	json.Unmarshal(respBytes, &cityList)
 
-	tick := time.NewTicker(time.Second * 6)
+	tick := time.NewTicker(time.Second * 8)
 	for {
 		<-tick.C
 
@@ -53,9 +53,8 @@ func DispatchMess(values ...interface{}) {
 				departList = append(departList, row)
 			}
 		}
-
 		for _, depart := range departList {
-			depart.SubScribeNum, err = GetSubscribeDepartNum(depart.DepaVaccId)
+			depart.SubScribeNum, err = GetSubscribeNum(depart.DepaVaccId)
 			if err != nil {
 				zap.L().Error("get subscribe num fail", zap.Error(err))
 				continue
@@ -75,13 +74,12 @@ func DispatchMess(values ...interface{}) {
 		Loop:
 			TaskStorage.Lock.RUnlock()
 		}
-
 	}
 	wg.Done()
 }
 
-// GetSubscribeDepartNum 获取指定社区的订阅人数
-func GetSubscribeDepartNum(id int64) (data int64, err error) {
+// GetSubscribeNum 获取指定社区的订阅人数
+func GetSubscribeNum(id int64) (data int64, err error) {
 	params := map[string]string{"depaVaccId": util.ToString(id)}
 	resp, err := TaskStorage.GetResource(config.SubscribeUrl, params)
 	if err != nil {
