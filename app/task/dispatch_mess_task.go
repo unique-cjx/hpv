@@ -22,10 +22,10 @@ func DispatchMess(values ...interface{}) {
 	TaskStorage.Tk = ymConf.Tk
 
 	var cityList []*City
-	tick := time.NewTicker(time.Second * 8)
 
 	for {
-		<-tick.C
+		time.Sleep(time.Second * 30)
+
 		if len(cityList) < 1 {
 			resp, err := TaskStorage.GetResource(config.CityListUrl, map[string]string{"parentCode": ymConf.Province.Code})
 			if err != nil {
