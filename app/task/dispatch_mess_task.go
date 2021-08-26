@@ -1,13 +1,10 @@
 package task
 
 import (
-	"errors"
 	"go.uber.org/zap"
-	"hpv/app/util"
 	"hpv/bootstrap/context"
 	"hpv/config"
 	"log"
-	"sync"
 	"time"
 )
 
@@ -20,26 +17,28 @@ type City struct {
 func DispatchMess(values ...interface{}) {
 	zap.L().Info("start dispatch mess task...")
 	ctx := values[0].(*context.Context)
-	wg := values[1].(*sync.WaitGroup)
 
 	ymConf := ctx.GetAppConfig().YueMiao
 	TaskStorage.Tk = ymConf.Tk
 
-	resp, err := TaskStorage.GetResource(config.CityListUrl, map[string]string{"parentCode": ymConf.Province.Code})
-	if err != nil {
-		log.Panic("get city list fail")
-	}
-	zap.L().Debug("city list", zap.Any("data", resp))
+	var cityList []*City
+	tick := time.NewTicker(time.Second * 8)
 
-	var cityList []City
-	respBytes, _ := json.Marshal(resp.Data)
-	json.Unmarshal(respBytes, &cityList)
-
-	tick := time.NewTicker(time.Second * 6)
 	for {
 		<-tick.C
+		if len(cityList) < 1 {
+			resp, err := TaskStorage.GetResource(config.CityListUrl, map[string]string{"parentCode": ymConf.Province.Code})
+			if err != nil {
+				log.Panic("get city list fail")
+			}
+			zap.L().Debug("city list", zap.Any("data", resp))
 
-		var departList []*DepartRows
+			respBytes, _ := json.Marshal(resp.Data)
+			json.Unmarshal(respBytes, &cityList)
+			continue
+		}
+
+		var departList []*DepartRow
 		for _, city := range cityList {
 			rows, err := GetActiveDepartList(city.Value)
 			if err != nil {
@@ -55,6 +54,7 @@ func DispatchMess(values ...interface{}) {
 		}
 		for _, depart := range departList {
 			time.Sleep(time.Second * 1)
+			var err error
 			depart.SubScribeNum, err = GetSubscribeNum(depart.DepaVaccId)
 			if err != nil {
 				zap.L().Error("get subscribe num fail", zap.Error(err))
@@ -76,21 +76,4 @@ func DispatchMess(values ...interface{}) {
 			TaskStorage.DidLock.RUnlock()
 		}
 	}
-	wg.Done()
-}
-
-// GetSubscribeNum 获取指定社区的订阅人数
-func GetSubscribeNum(id int64) (data int64, err error) {
-	params := map[string]string{"depaVaccId": util.ToString(id)}
-	resp, err := TaskStorage.GetResource(config.SubscribeUrl, params)
-	if err != nil {
-		return
-	}
-	if resp.Data == nil {
-		err = errors.New("temporarily unable to obtain data")
-		return
-	}
-	tmpData, _ := util.ToInt(resp.Data)
-	data = int64(tmpData)
-	return
 }

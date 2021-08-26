@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"go.uber.org/zap"
 	"hpv/config"
+	"log"
 	"net/http"
-	"sync"
 	"time"
 )
 
@@ -13,7 +13,6 @@ const tokenPrefix = "_xzkj_"
 
 // RefreshToken _
 func RefreshToken(values ...interface{}) {
-	wg := values[0].(*sync.WaitGroup)
 	tick := time.NewTicker(time.Minute * 30)
 
 	for {
@@ -31,8 +30,8 @@ func RefreshToken(values ...interface{}) {
 		resp.Body.Close()
 
 		if err != nil {
-			zap.L().Error("refresh token err", zap.Error(err))
-			goto Loop
+			zap.L().Error("refresh token err", zap.Error(err), zap.String("err tk", TaskStorage.Tk))
+			log.Panic(err)
 		}
 
 		var respCookies []*http.Cookie
@@ -44,7 +43,4 @@ func RefreshToken(values ...interface{}) {
 		}
 		zap.L().Debug("refresh wxtoken", zap.String("data", TaskStorage.Tk))
 	}
-
-Loop:
-	wg.Done()
 }

@@ -1,9 +1,9 @@
 package bootstrap
 
 import (
+	"hpv/app/task"
 	"hpv/bootstrap/context"
 	"os"
-	"sync"
 )
 
 type ConsoleApp struct {
@@ -36,12 +36,10 @@ func (col *ConsoleApp) AddTask(task Task) {
 }
 
 func (col *ConsoleApp) Run() {
-	var wg sync.WaitGroup
 
-	wg.Add(len(col.Tasks))
-	for _, task := range col.Tasks {
-		task.Values = append(task.Values, &wg)
-		go task.Handler(task.Values...)
+	task.InitTask()
+	for _, t := range col.Tasks {
+		go t.Handler(t.Values...)
 	}
-	wg.Wait()
+	select {}
 }

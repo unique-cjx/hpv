@@ -91,9 +91,9 @@ func (app App) initLogger() (err error) {
 	opts := []zapcore.WriteSyncer{
 		zapcore.AddSync(&lumberjack.Logger{
 			Filename:   file,
-			MaxSize:    128,
-			MaxAge:     7,
-			MaxBackups: 0,
+			MaxSize:    8,
+			MaxAge:     30,
+			MaxBackups: 7,
 			LocalTime:  true,
 			Compress:   false,
 		}),

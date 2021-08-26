@@ -5,14 +5,17 @@ import (
 	jsoniter "github.com/json-iterator/go"
 	"go.uber.org/zap"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"net/url"
+	"os"
+	"strings"
 	"sync"
 	"time"
 )
 
 var (
-	DepartChan  chan *DepartRows
+	DepartChan  chan *DepartRow
 	TaskStorage *taskStorage
 )
 
@@ -34,9 +37,92 @@ type Resource struct {
 	NotOK bool        `json:"notOk"`
 }
 
-func init() {
-	DepartChan = make(chan *DepartRows, 2<<4)
+func InitTask() {
+	DepartChan = make(chan *DepartRow, 2<<4)
 	TaskStorage = &taskStorage{DepartIds: make([]int64, 0)}
+	TaskStorage.initData()
+}
+
+// getDepartDataPath _
+func getDepartDataPath() (path string) {
+	path, _ = os.Getwd()
+	path += "/depart_data.json"
+	return
+}
+
+// initData _
+func (t *taskStorage) initData() {
+	path := getDepartDataPath()
+	var err error
+	defer func() {
+		if err != nil {
+			log.Panic(err)
+		}
+	}()
+
+	if _, err = os.Stat(path); os.IsNotExist(err) {
+		f, fErr := os.Create(path)
+		if fErr != nil {
+			err = fErr
+		}
+		f.WriteString("[")
+		err = nil
+
+	} else {
+		var (
+			departList []*DepartRow
+			data       []byte
+		)
+		if data, err = ioutil.ReadFile(path); err != nil {
+			return
+		}
+		json.Unmarshal(data, &departList)
+
+		t.DidLock.Lock()
+		for _, depart := range departList {
+			t.DepartIds = append(t.DepartIds, depart.DepaVaccId)
+		}
+		t.DidLock.Unlock()
+	}
+	zap.L().Debug("load the stored depart ids", zap.Int64s("data", t.DepartIds))
+	return
+}
+
+// AddDepartData _
+func (t *taskStorage) AddDepartData(depart *DepartRow) (err error) {
+	path := getDepartDataPath()
+
+	f, err := os.OpenFile(path, os.O_RDWR, 6)
+	defer f.Close()
+	if err != nil {
+		return
+	}
+
+	var data []byte
+	if data, err = json.Marshal(depart); err != nil {
+		return
+	}
+
+	contByte, _ := ioutil.ReadFile(path)
+	contStr := string(contByte)
+	index := int64(strings.Index(contStr, "]"))
+
+	var writeStr string
+	if index < 0 {
+		index = 1
+		writeStr = fmt.Sprintf("%s]", string(data))
+	} else {
+		writeStr = fmt.Sprintf(",%s]", string(data))
+	}
+	f.Seek(index, os.SEEK_SET)
+	f.WriteString(writeStr)
+
+	t.DidLock.Lock()
+	t.DepartIds = append(t.DepartIds, depart.DepaVaccId)
+	zap.L().Debug("storage depart ids", zap.Int64s("data", t.DepartIds))
+	t.DidLock.Unlock()
+
+	return
 }
 
 // GetResource _
