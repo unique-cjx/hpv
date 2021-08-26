@@ -9,4 +9,4 @@ _发布平台订阅人数较少的社区到指定的qq群，qq机器人发布消
 - 程序运行时会启动三个tasks，功能分别是
     1. *dispatch_mess_task*: 检查到低于订阅人数的社区发布消息到通道 
     2. *send_mess_task*: 获取通道的最新消息发布到qq群
-    3. *refresh_mess_task*: 定时更新`wxtoken`避免获取平台的数据失败`
+    3. *refresh_mess_task*: 定时更新`wxtoken`避免获取平台的数据失败
