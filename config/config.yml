@@ -2,7 +2,8 @@ logger:
   level: debug
 
 yuemiao:
-  tk: "wxtoken:a124fb15dede8e2eb066bd68793b9065_6604d5a69efd1f5c96b7471919ca9647"
+  # 用爬虫工具获取header的TK值
+  tk: ""
 
   province:
     name: "四川省"
