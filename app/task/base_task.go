@@ -56,6 +56,7 @@ func (t *taskStorage) initData() {
 	var err error
 	defer func() {
 		if err != nil {
+			zap.L().Error("load stored depart ids err", zap.Error(err))
 			log.Panic(err)
 		}
 	}()
@@ -84,7 +85,7 @@ func (t *taskStorage) initData() {
 		}
 		t.DidLock.Unlock()
 	}
-	zap.L().Debug("load the stored depart ids", zap.Int64s("data", t.DepartIds))
+	zap.L().Debug("load stored depart ids", zap.Int64s("data", t.DepartIds))
 	return
 }
 

@@ -4,7 +4,6 @@ import (
 	"go.uber.org/zap"
 	"hpv/bootstrap/context"
 	"hpv/config"
-	"log"
 	"time"
 )
 
@@ -29,9 +28,10 @@ func DispatchMess(values ...interface{}) {
 		if len(cityList) < 1 {
 			resp, err := TaskStorage.GetResource(config.CityListUrl, map[string]string{"parentCode": ymConf.Province.Code})
 			if err != nil {
-				log.Panic("get city list fail")
+				zap.L().Error("get city list failed", zap.Error(err))
+				continue
 			}
-			zap.L().Debug("city list", zap.Any("data", resp))
+			zap.L().Debug("get city list", zap.Any("data", resp))
 
 			respBytes, _ := json.Marshal(resp.Data)
 			json.Unmarshal(respBytes, &cityList)

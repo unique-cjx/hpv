@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"go.uber.org/zap"
 	"hpv/config"
-	"log"
 	"net/http"
 	"time"
 )
@@ -31,7 +30,7 @@ func RefreshToken(values ...interface{}) {
 
 		if err != nil {
 			zap.L().Error("refresh token err", zap.Error(err), zap.String("err tk", TaskStorage.Tk))
-			log.Panic(err)
+			continue
 		}
 
 		var respCookies []*http.Cookie
