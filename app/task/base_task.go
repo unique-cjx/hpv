@@ -145,10 +145,13 @@ func (t taskStorage) GetResource(urlStr string, params map[string]string) (res *
 	req.Header.Set("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_16) AppleWebKit/605.1.15 (KHTML, like Gecko) MicroMessenger/6.8.0(0x16080000) MacWechat/3.0.1(0x13000110) NetType/WIFI WindowsWechat")
 	zap.L().Debug("get req", zap.String("url", path), zap.String("tk", t.Tk))
 
-	resp, _ := client.Do(req)
-	defer resp.Body.Close()
-
 	res = new(Resource)
+	resp, err := client.Do(req)
+	defer resp.Body.Close()
+	if err != nil {
+		return
+	}
+
 	body, _ := ioutil.ReadAll(resp.Body)
 	_ = json.Unmarshal(body, res)
 
