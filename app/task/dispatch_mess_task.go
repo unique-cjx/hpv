@@ -4,6 +4,7 @@ import (
 	"go.uber.org/zap"
 	"hpv/bootstrap/context"
 	"hpv/config"
+	"runtime/debug"
 	"time"
 )
 
@@ -14,6 +15,13 @@ type City struct {
 
 // DispatchMess _
 func DispatchMess(values ...interface{}) {
+	defer func() {
+		if err := recover(); err != nil {
+			debug.PrintStack()
+			zap.S().Error("panic:", err)
+		}
+	}()
+
 	zap.L().Info("start dispatch mess task...")
 	ctx := values[0].(*context.Context)
 
@@ -63,10 +71,11 @@ func DispatchMess(values ...interface{}) {
 			zap.L().Debug("depart detail", zap.Any("data", depart))
 
 			TaskStorage.DidLock.RLock()
-			did := depart.DepaVaccId
-			if depart.SubScribeNum <= config.SubscribeAbleNum {
+			if depart.IsSeckill == 1 {
+				DepartChan <- depart
+			} else if depart.SubScribeNum <= config.SubscribeAbleNum {
 				for _, v := range TaskStorage.DepartIds {
-					if v == did {
+					if v == depart.DepaVaccId {
 						goto Loop
 					}
 				}

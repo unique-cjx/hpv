@@ -128,6 +128,7 @@ func (t *taskStorage) AddDepartData(depart *DepartRow) (err error) {
 
 // GetResource _
 func (t taskStorage) GetResource(urlStr string, params map[string]string) (res *Resource, err error) {
+	res = new(Resource)
 	request := url.Values{}
 	Url, err := url.Parse(urlStr)
 	if err != nil {
@@ -145,7 +146,6 @@ func (t taskStorage) GetResource(urlStr string, params map[string]string) (res *
 	req.Header.Set("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_16) AppleWebKit/605.1.15 (KHTML, like Gecko) MicroMessenger/6.8.0(0x16080000) MacWechat/3.0.1(0x13000110) NetType/WIFI WindowsWechat")
 	zap.L().Debug("get req", zap.String("url", path), zap.String("tk", t.Tk))
 
-	res = new(Resource)
 	resp, err := client.Do(req)
 	defer resp.Body.Close()
 	if err != nil {

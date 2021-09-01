@@ -67,8 +67,7 @@ func GetActiveDepartList(regionCode string) (rows []*DepartRow, err error) {
 // GetSubscribeNum 获取指定社区的订阅人数
 func GetSubscribeNum(id int64) (data int64, err error) {
 	params := map[string]string{"depaVaccId": util.ToString(id)}
-	var resp *Resource
-	resp, err = TaskStorage.GetResource(config.CountSubscribeUrl, params)
+	resp, err := TaskStorage.GetResource(config.CountSubscribeUrl, params)
 	if err != nil {
 		return
 	}
