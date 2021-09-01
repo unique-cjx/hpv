@@ -28,4 +28,7 @@ const (
 
 	// SubscribeAbleNum 订阅人数阈值
 	SubscribeAbleNum int64 = 2000
+
+	// NoticeMaxNum 通知最大次数
+	NoticeMaxNum int8 = 3
 )

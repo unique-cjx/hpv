@@ -26,6 +26,7 @@ type taskStorage struct {
 	DidLock   sync.RWMutex
 	DepartIds []int64
 	Tk        string
+	SeckillMp map[int64]int8
 }
 
 // Resource _
@@ -39,7 +40,7 @@ type Resource struct {
 
 func InitTask() {
 	DepartChan = make(chan *DepartRow, 2<<4)
-	TaskStorage = &taskStorage{DepartIds: make([]int64, 0)}
+	TaskStorage = &taskStorage{DepartIds: make([]int64, 0), SeckillMp: make(map[int64]int8)}
 	TaskStorage.initData()
 }
 

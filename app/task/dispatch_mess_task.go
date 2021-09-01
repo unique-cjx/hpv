@@ -71,11 +71,17 @@ func DispatchMess(values ...interface{}) {
 			zap.L().Debug("depart detail", zap.Any("data", depart))
 
 			TaskStorage.DidLock.RLock()
+			did := depart.DepaVaccId
 			if depart.IsSeckill == 1 {
-				DepartChan <- depart
+				num := TaskStorage.SeckillMp[did]
+				if num < config.NoticeMaxNum {
+					TaskStorage.SeckillMp[did] += 1
+					DepartChan <- depart
+					zap.L().Info("now depart id that can be subscribed", zap.Any("data", TaskStorage.SeckillMp))
+				}
 			} else if depart.SubScribeNum <= config.SubscribeAbleNum {
 				for _, v := range TaskStorage.DepartIds {
-					if v == depart.DepaVaccId {
+					if v == did {
 						goto Loop
 					}
 				}
