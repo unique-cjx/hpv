@@ -147,17 +147,18 @@ func (t taskStorage) GetResource(urlStr string, params map[string]string) (res *
 	zap.L().Debug("get req", zap.String("url", path), zap.String("tk", t.Tk))
 
 	resp, err := client.Do(req)
-	defer resp.Body.Close()
 	if err != nil {
 		return
 	}
+	defer resp.Body.Close()
 
 	body, _ := ioutil.ReadAll(resp.Body)
-	_ = json.Unmarshal(body, res)
+	if err = json.Unmarshal(body, res); err != nil {
+		return
+	}
 
 	if res.NotOK {
 		err = fmt.Errorf("get response fail err: %v", res.Msg)
 	}
-
 	return
 }
