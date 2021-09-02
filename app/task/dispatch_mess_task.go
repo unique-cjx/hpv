@@ -31,7 +31,7 @@ func DispatchMess(values ...interface{}) {
 	var cityList []*City
 
 	for {
-		time.Sleep(time.Second * 5)
+		time.Sleep(time.Second * 10)
 
 		if len(cityList) < 1 {
 			resp, err := TaskStorage.GetResource(config.CityListUrl, map[string]string{"parentCode": ymConf.Province.Code})
@@ -71,22 +71,19 @@ func DispatchMess(values ...interface{}) {
 			zap.L().Debug("depart detail", zap.Any("data", depart))
 
 			TaskStorage.DidLock.RLock()
-			did := depart.DepaVaccId
-			if depart.IsSeckill == 1 {
-				num := TaskStorage.SeckillMp[did]
-				if num < config.NoticeMaxNum {
-					TaskStorage.SeckillMp[did] += 1
-					DepartChan <- depart
-					zap.L().Info("now depart id that can be subscribed", zap.Any("data", TaskStorage.SeckillMp))
-				}
-			} else if depart.SubScribeNum <= config.SubscribeAbleNum {
-				for _, v := range TaskStorage.DepartIds {
-					if v == did {
-						goto Loop
+			if depart.SubScribeNum <= config.SubscribeAbleNum {
+				if depart.IsNotice == 0 && depart.Total > 0 && depart.SubScribeNum <= 200 {
+					depart.IsNowSubscribe = true
+				} else {
+					for _, v := range TaskStorage.DepartIds {
+						if v == depart.DepaVaccId {
+							goto Loop
+						}
 					}
 				}
 				DepartChan <- depart
 			}
+
 		Loop:
 			TaskStorage.DidLock.RUnlock()
 		}

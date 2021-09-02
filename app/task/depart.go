@@ -8,20 +8,19 @@ import (
 )
 
 type DepartRow struct {
-	DepaVaccId    int64  `json:"depaVaccId"`
-	VaccineCode   string `json:"vaccineCode"`
-	Code          string `json:"code"`
-	Name          string `json:"name"`
-	RegionCode    string `json:"regionCode"`
-	Tel           string `json:"tel"`
-	IsOpen        int8   `json:"isOpen"`
-	Address       string `json:"address"`
-	WorktimeDesc  string `json:"worktimeDesc"`
-	Total         int    `json:"total"`
-	SubScribeNum  int64  `json:"subscribeNum"` // 订阅人数
-	IsSeckill     int8   `json:"isSeckill"`
-	StopSubscribe int8   `json:"stopSubscribe"`
-	Prompt        string `json:"prompt"` // 注意事项
+	DepaVaccId     int64  `json:"depaVaccId"`
+	VaccineCode    string `json:"vaccineCode"`
+	Code           string `json:"code"`
+	Name           string `json:"name"`
+	RegionCode     string `json:"regionCode"`
+	Tel            string `json:"tel"`
+	IsOpen         int8   `json:"isOpen"`
+	Total          int    `json:"total"`
+	SubScribeNum   int64  `json:"subscribeNum,omitempty"` // 订阅人数
+	StopSubscribe  int8   `json:"stopSubscribe"`
+	Prompt         string `json:"prompt"` // 注意事项
+	IsNowSubscribe bool   `json:"-"`      // 是否可以立即订阅
+	IsNotice       int8   `json:"isNoticedUserAllowed"`
 }
 
 type DepartmentsResp struct {
@@ -44,7 +43,7 @@ func GetActiveDepartList(regionCode string) (rows []*DepartRow, err error) {
 		"regionCode": regionCode,
 		"sortType":   "1",
 		"isOpen":     "1",
-		"customId":   "3",
+		"customId":   "3", // 九价疫苗编号
 	}
 	resp, err := TaskStorage.GetResource(config.DepartListUrl, param)
 	if err != nil {

@@ -38,10 +38,10 @@ func SendMess(values ...interface{}) {
 		}
 
 		var text = [5]interface{}{}
-		if depart.IsSeckill == 0 {
-			text[0] = "检测到订阅量较少的社区"
+		if depart.IsNowSubscribe {
+			text[0] = "检测到可立即预约的社区"
 		} else {
-			text[0] = "检测到立即预约的社区（只全员提醒三次）"
+			text[0] = "检测到订阅量较少的社区"
 		}
 		text[1] = depart.Name
 		text[2] = "订阅人数：" + util.ToString(depart.SubScribeNum)
