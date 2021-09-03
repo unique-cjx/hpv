@@ -31,7 +31,7 @@ func DispatchMess(values ...interface{}) {
 	var cityList []*City
 
 	for {
-		time.Sleep(time.Second * 10)
+		time.Sleep(time.Second * 15)
 
 		if len(cityList) < 1 {
 			resp, err := TaskStorage.GetResource(config.CityListUrl, map[string]string{"parentCode": ymConf.Province.Code})
