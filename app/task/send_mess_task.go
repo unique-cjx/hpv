@@ -94,6 +94,6 @@ func SendMess(values ...interface{}) {
 			zap.S().Error(err)
 		}
 
-		time.Sleep(time.Second * 3)
+		time.Sleep(time.Second * 5)
 	}
 }

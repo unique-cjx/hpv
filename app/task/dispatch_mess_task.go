@@ -61,7 +61,6 @@ func DispatchMess(values ...interface{}) {
 			}
 		}
 		for _, depart := range departList {
-			time.Sleep(time.Second * 1)
 			var err error
 			depart.SubScribeNum, err = GetSubscribeNum(depart.DepaVaccId)
 			if err != nil {
@@ -70,22 +69,13 @@ func DispatchMess(values ...interface{}) {
 			}
 			zap.L().Debug("depart detail", zap.Any("data", depart))
 
-			TaskStorage.DidLock.RLock()
-			if depart.SubScribeNum <= config.SubscribeAbleNum {
-				if depart.IsNotice == 0 && depart.Total > 0 && depart.SubScribeNum <= 200 {
+			if depart.SubScribeNum <= config.SubscribeAbleMaxNum {
+				if depart.IsNotice == 0 && depart.Total > 0 {
 					depart.IsNowSubscribe = true
-				} else {
-					for _, v := range TaskStorage.DepartIds {
-						if v == depart.DepaVaccId {
-							goto Loop
-						}
-					}
 				}
 				DepartChan <- depart
 			}
-
-		Loop:
-			TaskStorage.DidLock.RUnlock()
+			time.Sleep(time.Second * 1)
 		}
 	}
 }

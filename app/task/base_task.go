@@ -10,7 +10,6 @@ import (
 	"net/url"
 	"os"
 	"strings"
-	"sync"
 	"time"
 )
 
@@ -23,7 +22,6 @@ var json = jsoniter.ConfigCompatibleWithStandardLibrary
 
 // taskStorage _
 type taskStorage struct {
-	DidLock   sync.RWMutex
 	DepartIds []int64
 	Tk        string
 }
@@ -79,11 +77,9 @@ func (t *taskStorage) initData() {
 		}
 		json.Unmarshal(data, &departList)
 
-		t.DidLock.Lock()
 		for _, depart := range departList {
 			t.DepartIds = append(t.DepartIds, depart.DepaVaccId)
 		}
-		t.DidLock.Unlock()
 	}
 	zap.L().Debug("load stored depart ids", zap.Int64s("data", t.DepartIds))
 	return
@@ -91,6 +87,11 @@ func (t *taskStorage) initData() {
 
 // AddDepartData _
 func (t *taskStorage) AddDepartData(depart *DepartRow) (err error) {
+	for _, did := range t.DepartIds {
+		if did == depart.DepaVaccId {
+			return
+		}
+	}
 	path := getDepartDataPath()
 
 	f, err := os.OpenFile(path, os.O_RDWR, 6)
@@ -118,10 +119,8 @@ func (t *taskStorage) AddDepartData(depart *DepartRow) (err error) {
 	f.Seek(index, os.SEEK_SET)
 	f.WriteString(writeStr)
 
-	t.DidLock.Lock()
 	t.DepartIds = append(t.DepartIds, depart.DepaVaccId)
 	zap.L().Debug("storage depart ids", zap.Int64s("data", t.DepartIds))
-	t.DidLock.Unlock()
 
 	return
 }
