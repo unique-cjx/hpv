@@ -23,7 +23,7 @@ func DispatchMess(values ...interface{}) {
 
 	var cityList []*City
 	for {
-		time.Sleep(time.Second * 5)
+		time.Sleep(time.Second * 10)
 
 		if len(cityList) < 1 {
 			for _, region := range cfg.Region {
@@ -70,7 +70,7 @@ func DispatchMess(values ...interface{}) {
 				}
 				DepartChan <- depart
 			}
-			time.Sleep(time.Second * 1)
+			time.Sleep(time.Millisecond * 500)
 		}
 	}
 }
