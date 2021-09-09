@@ -23,7 +23,7 @@ type DepartRow struct {
 	IsNotice       int8   `json:"isNoticedUserAllowed"`
 }
 
-type DepartmentsResp struct {
+type Department struct {
 	Offset       int         `json:"offset"`
 	End          int         `json:"end"`
 	Total        int         `json:"total"`
@@ -39,7 +39,7 @@ type DepartmentsResp struct {
 func GetActiveDepartList(regionCode string) (rows []*DepartRow, err error) {
 	param := map[string]string{
 		"offset":     "0",
-		"limit":      "80",
+		"limit":      "60",
 		"regionCode": regionCode,
 		"sortType":   "1",
 		"isOpen":     "1",
@@ -50,9 +50,9 @@ func GetActiveDepartList(regionCode string) (rows []*DepartRow, err error) {
 		zap.L().Error("get depart list error", zap.Error(err))
 		return
 	}
-	departResp := new(DepartmentsResp)
-	vByte, _ := json.Marshal(resp.Data)
-	json.Unmarshal(vByte, departResp)
+	departResp := new(Department)
+	departBytes, _ := json.Marshal(resp.Data)
+	json.Unmarshal(departBytes, departResp)
 
 	for _, row := range departResp.DepartRow {
 		if row.StopSubscribe == 0 && row.DepaVaccId != 0 {
@@ -80,8 +80,8 @@ func GetSubscribeNum(id int64) (data int64, err error) {
 }
 
 // SetDepartPrompt _
-func (depar *DepartRow) SetDepartPrompt() (err error) {
-	s := util.ToString(depar.DepaVaccId)
+func (depart *DepartRow) SetDepartPrompt() (err error) {
+	s := util.ToString(depart.DepaVaccId)
 	resp, err := TaskStorage.GetResource(config.DepartDetailUrl, map[string]string{"id": s})
 	if err != nil {
 		zap.L().Error("get depart detail err", zap.Error(err))
@@ -90,10 +90,10 @@ func (depar *DepartRow) SetDepartPrompt() (err error) {
 	data := resp.Data.(map[string]interface{})
 	prompt, ok := data["prompt"].(string)
 	if !ok {
-		depar.Prompt = ""
+		depart.Prompt = ""
 		return
 	}
-	depar.Prompt = prompt
+	depart.Prompt = prompt
 
 	return
 }

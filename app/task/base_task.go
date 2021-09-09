@@ -116,7 +116,7 @@ func (t *taskStorage) AddDepartData(depart *DepartRow) (err error) {
 	} else {
 		writeStr = fmt.Sprintf(",%s]", string(data))
 	}
-	f.Seek(index, os.SEEK_SET)
+	f.Seek(index, 0)
 	f.WriteString(writeStr)
 
 	t.DepartIds = append(t.DepartIds, depart.DepaVaccId)

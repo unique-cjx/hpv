@@ -1,13 +1,16 @@
 logger:
   level: debug
 
+# 约苗平台
 yuemiao:
   # 用爬虫工具获取header的TK值
-  tk: ""
+  tk: "wxtoken:a124fb15dede8e2eb066bd68793b9065_591da35a0f4c1d8096cee450fb8cdddc"
 
-  province:
+region:
+  - province:
     name: "四川省"
-    code: "51"
-  city:
-    name: "成都市"
-    code: "5101"
+    code: 51
+
+#  city:
+#    name: "成都市"
+#    code: "5101"

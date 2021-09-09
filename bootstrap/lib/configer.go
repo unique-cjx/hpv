@@ -1,22 +1,21 @@
 package lib
 
 type YamlConfig struct {
-	Logger  LoggerConfig  `yaml:"logger,omitempty"`
-	YueMiao YueMiaoConfig `yaml:"yuemiao"`
+	Logger LoggerCfg `yaml:"logger,omitempty"`
+	YM     YMCfg     `yaml:"yuemiao"`
+	Region []Region
 }
 
-type LoggerConfig struct {
+type LoggerCfg struct {
 	Level string `yaml:"level,omitempty" default:"debug"`
 	Debug bool   `yml:"debug,omitempty" default:"true"`
 }
 
-type YueMiaoConfig struct {
-	Tk       string `yaml:"tk"`
-	Province Region `yaml:"province"`
-	City     Region `yaml:"city"`
+type YMCfg struct {
+	Tk string `yaml:"tk"`
 }
 
 type Region struct {
 	Name string `yaml:"name"`
-	Code string `yaml:"code"`
+	Code int    `yaml:"code"`
 }

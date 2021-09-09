@@ -2,9 +2,9 @@ package task
 
 import (
 	"go.uber.org/zap"
+	"hpv/app/util"
 	"hpv/bootstrap/context"
 	"hpv/config"
-	"runtime/debug"
 	"time"
 )
 
@@ -15,35 +15,30 @@ type City struct {
 
 // DispatchMess _
 func DispatchMess(values ...interface{}) {
-	defer func() {
-		if err := recover(); err != nil {
-			debug.PrintStack()
-			zap.S().Error("panic:", err)
-		}
-	}()
-
 	zap.L().Info("start dispatch mess task...")
 	ctx := values[0].(*context.Context)
 
-	ymConf := ctx.GetAppConfig().YueMiao
-	TaskStorage.Tk = ymConf.Tk
+	cfg := ctx.GetAppConfig()
+	TaskStorage.Tk = cfg.YM.Tk
 
 	var cityList []*City
-
 	for {
-		time.Sleep(time.Second * 15)
+		time.Sleep(time.Second * 5)
 
 		if len(cityList) < 1 {
-			resp, err := TaskStorage.GetResource(config.CityListUrl, map[string]string{"parentCode": ymConf.Province.Code})
-			if err != nil {
-				zap.L().Error("get city list failed", zap.Error(err))
+			for _, region := range cfg.Region {
+				code := util.ToString(region.Code)
+				resp, err := TaskStorage.GetResource(config.CityListUrl, map[string]string{"parentCode": code})
+				if err != nil {
+					zap.L().Error("get city list failed", zap.Error(err))
+					continue
+				}
+				zap.L().Debug("get city list", zap.Any("data", resp))
+
+				respBytes, _ := json.Marshal(resp.Data)
+				json.Unmarshal(respBytes, &cityList)
 				continue
 			}
-			zap.L().Debug("get city list", zap.Any("data", resp))
-
-			respBytes, _ := json.Marshal(resp.Data)
-			json.Unmarshal(respBytes, &cityList)
-			continue
 		}
 
 		var departList []*DepartRow
