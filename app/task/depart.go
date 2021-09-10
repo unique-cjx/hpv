@@ -55,7 +55,7 @@ func GetActiveDepartList(regionCode string) (rows []*DepartRow, err error) {
 	json.Unmarshal(departBytes, departResp)
 
 	for _, row := range departResp.DepartRow {
-		if row.StopSubscribe == 0 && row.DepaVaccId != 0 {
+		if (row.StopSubscribe == 0 && row.DepaVaccId != 0) || (row.StopSubscribe == 1 && row.Total > 0) {
 			row := row
 			rows = append(rows, &row)
 		}
