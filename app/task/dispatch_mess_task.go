@@ -26,7 +26,7 @@ func DispatchMess(values ...interface{}) {
 		time.Sleep(time.Second * 10)
 
 		if len(cityList) < 1 {
-			for _, region := range cfg.Region {
+			for _, region := range cfg.Regions {
 				code := util.ToString(region.Code)
 				resp, err := TaskStorage.GetResource(config.CityListUrl, map[string]string{"parentCode": code})
 				if err != nil {
@@ -43,7 +43,7 @@ func DispatchMess(values ...interface{}) {
 
 		var departList []*DepartRow
 		for _, city := range cityList {
-			rows, err := GetActiveDepartList(city.Value)
+			rows, err := GetAllDepartList(city.Value)
 			if err != nil {
 				zap.L().Error("get depart list fail", zap.Error(err))
 				continue
@@ -56,21 +56,32 @@ func DispatchMess(values ...interface{}) {
 			}
 		}
 		for _, depart := range departList {
-			var err error
-			depart.SubScribeNum, err = GetSubscribeNum(depart.DepaVaccId)
-			if err != nil {
-				zap.L().Error("get subscribe num fail", zap.Error(err))
-				continue
-			}
+			time.Sleep(time.Millisecond * 500)
 			zap.L().Debug("depart detail", zap.Any("data", depart))
 
-			if depart.SubScribeNum <= config.SubscribeAbleMaxNum {
-				if depart.IsNotice == 0 && depart.Total > 0 {
+			did := depart.DepaVaccId
+			// 立即订阅
+			if TaskStorage.IsSendDepart(did) && depart.Total > 0 {
+				if depart.IsNotice == 0 {
 					depart.IsNowSubscribe = true
+					DepartChan <- depart
+					continue
 				}
-				DepartChan <- depart
+
+				var err error
+				if depart.SubScribeNum, err = GetSubscribeNum(did); err != nil {
+					zap.L().Error("get subscribe num fail", zap.Error(err))
+					continue
+				}
+				zap.L().Debug("get depart subscribe number", zap.Int64("depart_id", did), zap.Int64("num", depart.SubScribeNum))
+
+				// 可以订阅
+				if depart.SubScribeNum <= config.SubscribeAbleMaxNum && depart.StopSubscribe == 0 {
+					DepartChan <- depart
+				}
 			}
-			time.Sleep(time.Millisecond * 500)
 		}
+
 	}
+
 }

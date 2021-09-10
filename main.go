@@ -11,6 +11,7 @@ func main() {
 	app.AddTask(bootstrap.Task{Values: []interface{}{app.Ctx}, Handler: task.DispatchMess})
 	app.AddTask(bootstrap.Task{Handler: task.SendMess})
 	app.AddTask(bootstrap.Task{Handler: task.RefreshToken})
+	app.AddTask(bootstrap.Task{Handler: task.RunCorn})
 
 	app.Run()
 }

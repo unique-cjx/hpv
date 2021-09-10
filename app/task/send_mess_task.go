@@ -32,7 +32,8 @@ func SendMess(values ...interface{}) {
 	for {
 		depart := <-DepartChan
 
-		if err := depart.SetDepartPrompt(); err != nil {
+		prompt, err := depart.GetDepartPrompt()
+		if err != nil {
 			zap.S().Error(err)
 			continue
 		}
@@ -46,7 +47,7 @@ func SendMess(values ...interface{}) {
 		text[1] = depart.Name
 		text[2] = "订阅人数：" + util.ToString(depart.SubScribeNum)
 		text[3] = "社区电话：" + depart.Tel
-		text[4] = "注意事项：" + depart.Prompt
+		text[4] = "注意事项：" + prompt
 
 		var buffer strings.Builder
 		for _, s := range text {

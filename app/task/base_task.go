@@ -10,6 +10,7 @@ import (
 	"net/url"
 	"os"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -22,8 +23,9 @@ var json = jsoniter.ConfigCompatibleWithStandardLibrary
 
 // taskStorage _
 type taskStorage struct {
-	DepartIds []int64
-	Tk        string
+	Tk       string
+	Lock     sync.RWMutex
+	DepartMp map[int64]int64
 }
 
 // Resource _
@@ -37,7 +39,8 @@ type Resource struct {
 
 func InitTask() {
 	DepartChan = make(chan *DepartRow, 2<<4)
-	TaskStorage = &taskStorage{DepartIds: make([]int64, 0)}
+	TaskStorage = new(taskStorage)
+	TaskStorage.DepartMp = make(map[int64]int64)
 	TaskStorage.initData()
 }
 
@@ -59,6 +62,7 @@ func (t *taskStorage) initData() {
 		}
 	}()
 
+	var departIds []int64
 	if _, err = os.Stat(path); os.IsNotExist(err) {
 		f, fErr := os.Create(path)
 		if fErr != nil {
@@ -78,22 +82,49 @@ func (t *taskStorage) initData() {
 		json.Unmarshal(data, &departList)
 
 		for _, depart := range departList {
-			t.DepartIds = append(t.DepartIds, depart.DepaVaccId)
+			departIds = append(departIds, depart.DepaVaccId)
 		}
 	}
-	zap.L().Debug("load stored depart ids", zap.Int64s("data", t.DepartIds))
+	zap.L().Debug("load stored depart ids", zap.Int64s("data", departIds))
 	return
 }
 
-// AddDepartData _
-func (t *taskStorage) AddDepartData(depart *DepartRow) (err error) {
-	for _, did := range t.DepartIds {
-		if did == depart.DepaVaccId {
-			return
+// IsSendDepart _
+func (t *taskStorage) IsSendDepart(did int64) (check bool) {
+	t.Lock.RLock()
+	timeStamp, ok := t.DepartMp[did]
+	if ok {
+		if time.Now().Unix()-timeStamp > 300 {
+			check = false
+		} else {
+			check = true
 		}
-	}
-	path := getDepartDataPath()
 
+	} else {
+		check = true
+	}
+
+	t.Lock.RUnlock()
+	return
+}
+
+// AddDepartData 写入已发送的社区到json文件
+func (t *taskStorage) AddDepartData(depart *DepartRow) (err error) {
+	did := depart.DepaVaccId
+
+	t.Lock.Lock()
+	defer t.Lock.Unlock()
+
+	tst, exist := t.DepartMp[did]
+	zap.S().Debugf("depart_id: %d timestamp: %d", did, tst)
+
+	if !exist {
+		t.DepartMp[did] = time.Now().Unix()
+	} else {
+		return
+	}
+
+	path := getDepartDataPath()
 	f, err := os.OpenFile(path, os.O_RDWR, 6)
 	defer f.Close()
 	if err != nil {
@@ -119,9 +150,7 @@ func (t *taskStorage) AddDepartData(depart *DepartRow) (err error) {
 	f.Seek(index, 0)
 	f.WriteString(writeStr)
 
-	t.DepartIds = append(t.DepartIds, depart.DepaVaccId)
-	zap.L().Debug("storage depart ids", zap.Int64s("data", t.DepartIds))
-
+	zap.L().Debug("storage depart", zap.Int64("id", did))
 	return
 }
 

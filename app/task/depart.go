@@ -18,8 +18,7 @@ type DepartRow struct {
 	Total          int    `json:"total"`
 	SubScribeNum   int64  `json:"subscribeNum,omitempty"` // 订阅人数
 	StopSubscribe  int8   `json:"stopSubscribe"`
-	Prompt         string `json:"prompt"` // 注意事项
-	IsNowSubscribe bool   `json:"-"`      // 是否可以立即订阅
+	IsNowSubscribe bool   `json:"-"` // 是否可以立即订阅
 	IsNotice       int8   `json:"isNoticedUserAllowed"`
 }
 
@@ -35,11 +34,11 @@ type Department struct {
 	Pages        int         `json:"pages"`
 }
 
-// GetActiveDepartList 获取可订阅的社区列表
-func GetActiveDepartList(regionCode string) (rows []*DepartRow, err error) {
+// GetAllDepartList 获取可订阅的社区列表
+func GetAllDepartList(regionCode string) (rows []*DepartRow, err error) {
 	param := map[string]string{
 		"offset":     "0",
-		"limit":      "60",
+		"limit":      "80",
 		"regionCode": regionCode,
 		"sortType":   "1",
 		"isOpen":     "1",
@@ -55,7 +54,7 @@ func GetActiveDepartList(regionCode string) (rows []*DepartRow, err error) {
 	json.Unmarshal(departBytes, departResp)
 
 	for _, row := range departResp.DepartRow {
-		if (row.StopSubscribe == 0 && row.DepaVaccId != 0) || (row.StopSubscribe == 1 && row.Total > 0) {
+		if row.DepaVaccId != 0 {
 			row := row
 			rows = append(rows, &row)
 		}
@@ -79,8 +78,8 @@ func GetSubscribeNum(id int64) (data int64, err error) {
 	return
 }
 
-// SetDepartPrompt _
-func (depart *DepartRow) SetDepartPrompt() (err error) {
+// GetDepartPrompt _
+func (depart *DepartRow) GetDepartPrompt() (prompt string, err error) {
 	s := util.ToString(depart.DepaVaccId)
 	resp, err := TaskStorage.GetResource(config.DepartDetailUrl, map[string]string{"id": s})
 	if err != nil {
@@ -90,10 +89,8 @@ func (depart *DepartRow) SetDepartPrompt() (err error) {
 	data := resp.Data.(map[string]interface{})
 	prompt, ok := data["prompt"].(string)
 	if !ok {
-		depart.Prompt = ""
+		prompt = ""
 		return
 	}
-	depart.Prompt = prompt
-
 	return
 }
