@@ -61,8 +61,8 @@ func DispatchMess(values ...interface{}) {
 
 			did := depart.DepaVaccId
 			// 立即订阅
-			if TaskStorage.IsSendDepart(did) && depart.Total > 0 {
-				if depart.IsNotice == 0 {
+			if TaskStorage.IsSendDepart(did) {
+				if depart.IsNotice == 0 && depart.Total > 0 {
 					depart.IsNowSubscribe = true
 					DepartChan <- depart
 					continue
