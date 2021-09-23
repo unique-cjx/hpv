@@ -91,9 +91,7 @@ func SendMess(values ...interface{}) {
 
 		zap.L().Debug("qq-cq server resp body", zap.String("body", string(respBytes)))
 
-		if err = TaskStorage.AddDepartData(depart); err != nil {
-			zap.S().Error(err)
-		}
+		TaskStorage.AddSendDepart(depart)
 
 		time.Sleep(time.Second * 5)
 	}

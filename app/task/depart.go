@@ -38,7 +38,7 @@ type Department struct {
 func GetAllDepartList(regionCode string) (rows []*DepartRow, err error) {
 	param := map[string]string{
 		"offset":     "0",
-		"limit":      "80",
+		"limit":      "30",
 		"regionCode": regionCode,
 		"sortType":   "1",
 		"isOpen":     "1",

@@ -5,11 +5,8 @@ import (
 	jsoniter "github.com/json-iterator/go"
 	"go.uber.org/zap"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"net/url"
-	"os"
-	"strings"
 	"sync"
 	"time"
 )
@@ -41,52 +38,6 @@ func InitTask() {
 	DepartChan = make(chan *DepartRow, 2<<4)
 	TaskStorage = new(taskStorage)
 	TaskStorage.DepartMp = make(map[int64]int64)
-	TaskStorage.initData()
-}
-
-// getDepartDataPath _
-func getDepartDataPath() (path string) {
-	path, _ = os.Getwd()
-	path += "/depart_data.json"
-	return
-}
-
-// initData _
-func (t *taskStorage) initData() {
-	path := getDepartDataPath()
-	var err error
-	defer func() {
-		if err != nil {
-			zap.L().Error("load stored depart ids err", zap.Error(err))
-			log.Panic(err)
-		}
-	}()
-
-	var departIds []int64
-	if _, err = os.Stat(path); os.IsNotExist(err) {
-		f, fErr := os.Create(path)
-		if fErr != nil {
-			err = fErr
-		}
-		f.WriteString("[")
-		err = nil
-
-	} else {
-		var (
-			departList []*DepartRow
-			data       []byte
-		)
-		if data, err = ioutil.ReadFile(path); err != nil {
-			return
-		}
-		json.Unmarshal(data, &departList)
-
-		for _, depart := range departList {
-			departIds = append(departIds, depart.DepaVaccId)
-		}
-	}
-	zap.L().Debug("load stored depart ids", zap.Int64s("data", departIds))
-	return
 }
 
 // IsSendDepart _
@@ -108,8 +59,8 @@ func (t *taskStorage) IsSendDepart(did int64) (check bool) {
 	return
 }
 
-// AddDepartData 写入已发送的社区到json文件
-func (t *taskStorage) AddDepartData(depart *DepartRow) (err error) {
+// AddSendDepart _
+func (t *taskStorage) AddSendDepart(depart *DepartRow) {
 	did := depart.DepaVaccId
 
 	t.Lock.Lock()
@@ -120,38 +71,7 @@ func (t *taskStorage) AddDepartData(depart *DepartRow) (err error) {
 
 	if !exist {
 		t.DepartMp[did] = time.Now().Unix()
-	} else {
-		return
 	}
-
-	path := getDepartDataPath()
-	f, err := os.OpenFile(path, os.O_RDWR, 6)
-	defer f.Close()
-	if err != nil {
-		return
-	}
-
-	var data []byte
-	if data, err = json.Marshal(depart); err != nil {
-		return
-	}
-
-	contByte, _ := ioutil.ReadFile(path)
-	contStr := string(contByte)
-	index := int64(strings.Index(contStr, "]"))
-
-	var writeStr string
-	if index < 0 {
-		index = 1
-		writeStr = fmt.Sprintf("%s]", string(data))
-	} else {
-		writeStr = fmt.Sprintf(",%s]", string(data))
-	}
-	f.Seek(index, 0)
-	f.WriteString(writeStr)
-
-	zap.L().Debug("storage depart", zap.Int64("id", did))
-	return
 }
 
 // GetResource _
