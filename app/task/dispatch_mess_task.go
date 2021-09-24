@@ -59,8 +59,8 @@ func DispatchMess(ctx *context.Context) {
 			zap.L().Debug("depart detail", zap.Any("data", depart))
 
 			did := depart.DepaVaccId
-			// 立即订阅
 			if TaskStorage.IsSendDepart(did) {
+				// 立即订阅
 				if depart.IsNotice == 0 && depart.Total > 0 {
 					depart.IsNowSubscribe = true
 					DepartChan <- depart
