@@ -17,7 +17,7 @@ import (
 )
 
 // SendMess _
-func SendMess(values ...interface{}) {
+func SendMess() {
 	zap.L().Info("start send mess task...")
 
 	pwd, _ := os.Getwd()

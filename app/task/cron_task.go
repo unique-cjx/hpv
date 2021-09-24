@@ -7,7 +7,7 @@ import (
 	"github.com/robfig/cron/v3"
 )
 
-func RunCorn(values ...interface{}) {
+func RunCorn() {
 	nyc, _ := time.LoadLocation("local")
 	cronder := cron.New(cron.WithSeconds(), cron.WithLocation(nyc))
 	cronder.AddFunc("0 0 0 * * *", ResetDepartMp)

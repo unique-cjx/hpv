@@ -14,9 +14,8 @@ type City struct {
 }
 
 // DispatchMess _
-func DispatchMess(values ...interface{}) {
+func DispatchMess(ctx *context.Context) {
 	zap.L().Info("start dispatch mess task...")
-	ctx := values[0].(*context.Context)
 
 	cfg := ctx.GetAppConfig()
 	TaskStorage.Tk = cfg.YM.Tk

@@ -16,7 +16,7 @@ type Task struct {
 	Handler TaskHandler
 }
 
-type TaskHandler func(values ...interface{})
+type TaskHandler func()
 
 // initCommon _
 func (col *ConsoleApp) initCommon() {
@@ -36,10 +36,10 @@ func (col *ConsoleApp) AddTask(task Task) {
 }
 
 func (col *ConsoleApp) Run() {
-
 	task.InitTask()
+
 	for _, t := range col.Tasks {
-		go t.Handler(t.Values...)
+		go t.Handler()
 	}
-	select {}
+	task.DispatchMess(col.Ctx)
 }

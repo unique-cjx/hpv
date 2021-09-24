@@ -64,14 +64,13 @@ func (t *taskStorage) AddSendDepart(depart *DepartRow) {
 	did := depart.DepaVaccId
 
 	t.Lock.Lock()
-	defer t.Lock.Unlock()
-
 	tst, exist := t.DepartMp[did]
 	zap.S().Debugf("depart_id: %d timestamp: %d", did, tst)
 
 	if !exist {
 		t.DepartMp[did] = time.Now().Unix()
 	}
+	t.Lock.Unlock()
 }
 
 // GetResource _

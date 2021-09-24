@@ -11,7 +11,7 @@ import (
 const tokenPrefix = "_xzkj_"
 
 // RefreshToken _
-func RefreshToken(values ...interface{}) {
+func RefreshToken() {
 	tick := time.NewTicker(time.Minute * 30)
 
 	for {

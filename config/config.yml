@@ -4,7 +4,7 @@ logger:
 # 约苗平台
 yuemiao:
   # 用爬虫工具获取header的TK值
-  tk: "wxtoken:a124fb15dede8e2eb066bd68793b9065_18a4c61476e16628fdae1c36d1fc6f43"
+  tk: "wxtoken:a124fb15dede8e2eb066bd68793b9065_58659904c0aa084522921959c2f952b4"
 
 region:
   - province:
